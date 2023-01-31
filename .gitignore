@@ -1,0 +1,9 @@
+.envrc
+.direnv/
+.streamlit/secrets.toml
+.DS_Store
+__pycache__/
+*.txt
+*.csv
+*.parquet
+*.zip
