@@ -1,8 +1,8 @@
 Support access to:
 
-[x] Local files
-[x] S3 files
-[ ] GCS files
+- [x] Local files
+- [x] S3 files
+- [ ] GCS files
 
 Perhaps special handling of csv & parquet, wrapping pandas read_csv, read_parquet
 
