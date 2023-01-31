@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import streamlit as st
 
@@ -84,8 +86,14 @@ secret = "..."
 with s3_other:
     st.write("## Working with S3 files (credentials in env variables)")
 
+    # HACK to get the environment variables set
+    secrets = st.secrets["connections"]["s3"]
+
+    os.environ["AWS_ACCESS_KEY_ID"] = secrets["key"]
+    os.environ["AWS_SECRET_ACCESS_KEY"] = secrets["secret"]
+
     st.write(
-        "Credentials stored in `~/.aws/config` or `AWS_ACCESS_KEY` & "
+        "Credentials stored in `~/.aws/config` or `AWS_ACCESS_KEY_ID` & "
         "`AWS_SECRET_ACCES_KEY` environment variables"
     )
 
