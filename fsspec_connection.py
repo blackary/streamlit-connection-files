@@ -38,6 +38,11 @@ class FileConnection(BaseConnection[AbstractFileSystem]):
         if protocol is None:
             protocol = "file"
 
+        if protocol == "gcs" and secrets:
+            secrets = {"token": secrets}
+
+        secrets.update(kwargs)
+
         fs = filesystem(protocol, **secrets)
 
         return fs
@@ -52,6 +57,11 @@ class FileConnection(BaseConnection[AbstractFileSystem]):
     def open(
         self, path: str | Path, mode: str = "rb", *args, **kwargs
     ) -> Iterator[TextIOWrapper | AbstractBufferedFile]:
+        # Connection name is only passed to make sure that the cache is
+        # connection-specific
+        if "connection_name" in kwargs:
+            kwargs.pop("connection_name")
+
         with self.instance.open(path, mode, *args, **kwargs) as f:
             yield f
 
@@ -62,28 +72,42 @@ class FileConnection(BaseConnection[AbstractFileSystem]):
         with self.instance.open(path, mode, *args, **kwargs) as f:
             return f.read()
 
-    def read_text(self, path: str | Path, ttl: TTLType = 3600, *args, **kwargs) -> str:
+    def read_text(self, path: str | Path, ttl: TTLType = 3600, **kwargs) -> str:
         return cache_data(self._read_data, ttl=ttl)(  # type: ignore
-            path, binary=False, *args, **kwargs
+            path, binary=False, connection_name=self._connection_name, **kwargs
         )
 
     def read_bytes(self, path: str | Path, ttl: TTLType = 3600, **kwargs) -> bytes:
         return cache_data(self._read_data, ttl=ttl)(  # type: ignore
-            path, binary=True, **kwargs
+            path, binary=True, connection_name=self._connection_name, **kwargs
         )
 
     def _read_csv(self, path: str | Path, **kwargs) -> pd.DataFrame:
+        # Connection name is only passed to make sure that the cache is
+        # connection-specific
+        if "connection_name" in kwargs:
+            kwargs.pop("connection_name")
+
         with self.open(path, "rt") as f:
             return pd.read_csv(f, **kwargs)
 
     def read_csv(self, path: str | Path, ttl: TTLType = 3600, **kwargs) -> pd.DataFrame:
-        return cache_data(self._read_csv, ttl=ttl)(path, **kwargs)  # type: ignore
+        return cache_data(self._read_csv, ttl=ttl)(  # type: ignore
+            path, connection_name=self._connection_name, **kwargs
+        )
 
     def _read_parquet(self, path: str | Path, **kwargs) -> pd.DataFrame:
+        # Connection name is only passed to make sure that the cache is
+        # connection-specific
+        if "connection_name" in kwargs:
+            kwargs.pop("connection_name")
+
         with self.open(path, "rb") as f:
             return pd.read_parquet(f, **kwargs)  # type: ignore
 
     def read_parquet(
         self, path: str | Path, ttl: TTLType = 3600, **kwargs
     ) -> pd.DataFrame:
-        return cache_data(self._read_parquet, ttl=ttl)(path, **kwargs)  # type: ignore
+        return cache_data(self._read_parquet, ttl=ttl)(  # type: ignore
+            path, connection_name=self._connection_name, **kwargs
+        )
