@@ -3,8 +3,8 @@
 .streamlit/secrets.toml
 .DS_Store
 __pycache__/
-*.txt
-*.csv
-*.parquet
+test.txt
+test.csv
+test.parquet
 *.zip
 *.json
